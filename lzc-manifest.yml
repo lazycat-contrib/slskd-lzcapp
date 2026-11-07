@@ -1,0 +1,62 @@
+application:
+  subdomain: slskd
+  multi_instance: false
+  # slskd has web UI auth, but it is a single fixed credential seeded via env
+  # at deploy time (no self-registration path). Keep platform entry auth as
+  # the first line of defense: no public_path.
+  upstreams:
+    - location: /package-licenses/
+      backend: file:///lzcapp/pkg/content/licenses/
+    - location: /
+      backend: http://slskd:5030/
+  # Soulseek client listening port (incoming connections from the
+  # Soulseek network). TCP only, same pattern as syncthing.
+  ingress:
+    - protocol: tcp
+      port: 50300
+      service: slskd
+services:
+  slskd:
+    # upstream: slskd/slskd:0.26.2
+    image: docker.1ms.run/slskd/slskd:0.26.2
+    environment:
+      # Allow editing options (including Soulseek network credentials)
+      # from the web UI; without it users cannot self-configure anything.
+      - SLSKD_REMOTE_CONFIGURATION=true
+      # 默认凭据为 slskd/slskd； the password is replaced
+      # with a random value at deploy time (no env-free weak default).
+      - SLSKD_USERNAME=slskd
+      - SLSKD_PASSWORD={{PASSWORD_slskd_pw}}
+      # Pin the JWT signing key so sessions survive container recreation.
+      - SLSKD_JWT_KEY={{ printf "%x" (stable_secret "slskd_jwt_key") }}
+      - SLSKD_SHARED_DIR=/music
+      - TZ=Asia/Shanghai
+    binds:
+      # Application data (db, downloads, incomplete, logs) — upstream
+      # official Docker guide mounts appdata at /app.
+      - /lzcapp/var/app:/app
+      # Optional share directory; set via SLSKD_SHARED_DIR above.
+      - /lzcapp/var/music:/music
+usage: |
+  slskd 是一个现代化的 Soulseek 网络客户端（Web UI）：搜索、浏览、
+  下载与分享音乐等文件。
+
+  使用方法：
+  1. 打开应用，用账号 slskd 登录，密码为部署时生成的随机密码
+     （在部署参数中查看/修改）。登录后请立刻在设置中修改密码。
+  2. Soulseek 网络凭据需自行配置：默认开启远程配置
+     （SLSKD_REMOTE_CONFIGURATION=true），可在 Web UI 的设置页里
+     填入自己的 Soulseek 账号密码。
+  3. 共享目录：把要分享的文件放进应用数据目录下的 music 文件夹
+     （/lzcapp/var/music，容器内 /music），已在配置中指向该目录。
+  4. 下载内容保存在 /lzcapp/var/app/downloads，卸载应用会一并删除，
+     请定期备份。
+  5. Soulseek 网络的入站监听端口 50300 已通过平台 ingress 开放（TCP），
+     无需自行放行防火墙。
+
+  数据与安全：
+  - 本包不对外开放未登录访问（不加 public_path），平台入口鉴权为
+    第一道防线；Web UI 自带账号体系（用户名 slskd + 部署时注入的随机密码）。
+
+  说明：
+  - 本包未做实机验证，功能以官方文档为准：https://github.com/slskd/slskd/blob/master/docs/config.md

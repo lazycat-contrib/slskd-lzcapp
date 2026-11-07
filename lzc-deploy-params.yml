@@ -1,0 +1,13 @@
+params:
+  - id: slskd_pw
+    type: secret
+    name: "slskd Web UI 密码"
+    description: "Web UI 账号 slskd 的登录密码（已预置随机值，请登录后修改）"
+    default_value: "WR1uihH4QaMqbgxWFvvG1Q"
+    optional: false
+
+locales:
+  zh:
+    slskd_pw:
+      name: "slskd Web UI 密码"
+      description: "账号 slskd 的登录密码（已预置随机值，请登录后修改）"

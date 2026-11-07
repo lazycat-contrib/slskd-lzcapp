@@ -1,0 +1,18 @@
+package: community.lazycat.app.slskd
+name: slskd
+version: 0.26.2
+description: "A modern client-server application for the Soulseek peer-to-peer network."
+min_os_version: "1.5.0"
+homepage: https://github.com/slskd/slskd
+author: slskd
+license: AGPL-3.0
+permissions:
+  required:
+    - net.internet
+locales:
+  zh:
+    name: slskd
+    description: "现代化 Soulseek 网络客户端：Web UI 搜索、下载与分享音乐等文件。"
+  en:
+    name: slskd
+    description: "A modern client-server application for the Soulseek peer-to-peer network."
